@@ -1,0 +1,61 @@
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const config: HardhatUserConfig = {
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
+  networks: {
+    mantleTestnet: {
+      url: process.env.MANTLE_TESTNET_RPC || "https://rpc.testnet.mantle.xyz",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 5001,
+    },
+    mantleMainnet: {
+      url: process.env.MANTLE_MAINNET_RPC || "https://rpc.mantle.xyz",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 5000,
+    },
+  },
+  etherscan: {
+    apiKey: {
+      mantleTestnet: "abc", // No API key needed for Mantle
+      mantleMainnet: "abc",
+    },
+    customChains: [
+      {
+        network: "mantleTestnet",
+        chainId: 5001,
+        urls: {
+          apiURL: "https://explorer.testnet.mantle.xyz/api",
+          browserURL: "https://explorer.testnet.mantle.xyz"
+        }
+      },
+      {
+        network: "mantleMainnet",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://explorer.mantle.xyz/api",
+          browserURL: "https://explorer.mantle.xyz"
+        }
+      }
+    ]
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
+};
+
+export default config;
