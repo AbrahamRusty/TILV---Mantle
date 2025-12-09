@@ -1,16 +1,18 @@
+'use client'
+
 import { configureChains, createConfig } from 'wagmi'
+import { mantleTestnet } from 'wagmi/chains'
 import { publicProvider } from 'wagmi/providers/public'
-import { mantle, mantleTestnet } from 'wagmi/chains'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 
-// Configure chains & providers
+// Configure Mantle chains
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [mantleTestnet, mantle],
+  [mantleTestnet],
   [publicProvider()]
 )
 
-// Set up connectors
+// Configure connectors
 const connectors = [
   new InjectedConnector({
     chains,
@@ -27,7 +29,7 @@ const connectors = [
   }),
 ]
 
-// Create config
+// Create wagmi config
 export const config = createConfig({
   autoConnect: true,
   connectors,

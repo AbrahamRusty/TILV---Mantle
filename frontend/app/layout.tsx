@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'TILV - Tokenized Invoice Liquidity Vault',
-  description: 'Invoice Tokenization Platform on Mantle Network',
+  description: 'Invoice financing platform on Mantle Network - Access instant liquidity or earn stable yields',
 }
 
 export default function RootLayout({

@@ -1,0 +1,32 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Temporary files
+temp_*
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (if downloaded locally)
+models/
+*.h5
+*.pkl
+*.joblib
+
+# Logs
+*.log
+logs/

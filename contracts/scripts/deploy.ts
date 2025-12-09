@@ -1,47 +1,89 @@
 import { ethers } from "hardhat";
 
 async function main() {
+  console.log("🚀 Deploying TILV Contracts to Mantle Network...\n");
+
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with account:", deployer.address);
+  console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)), "MNT\n");
 
-  // Deploy InvoiceNFT
+  // 1. Deploy InvoiceNFT
+  console.log("📝 Deploying InvoiceNFT...");
   const InvoiceNFT = await ethers.getContractFactory("InvoiceNFT");
   const invoiceNFT = await InvoiceNFT.deploy();
-  await invoiceNFT.deployed();
-  console.log("InvoiceNFT deployed to:", invoiceNFT.address);
+  await invoiceNFT.waitForDeployment();
+  const invoiceNFTAddress = await invoiceNFT.getAddress();
+  console.log("✅  InvoiceNFT deployed to:", invoiceNFTAddress);
 
-  // Deploy RiskEngine
+  // 2. Deploy RiskEngine
+  console.log("\n⚖️  Deploying RiskEngine...");
   const RiskEngine = await ethers.getContractFactory("RiskEngine");
-  const riskEngine = await RiskEngine.deploy(deployer.address, deployer.address);
-  await riskEngine.deployed();
-  console.log("RiskEngine deployed to:", riskEngine.address);
+  const riskEngine = await RiskEngine.deploy();
+  await riskEngine.waitForDeployment();
+  const riskEngineAddress = await riskEngine.getAddress();
+  console.log("✅ RiskEngine deployed to:", riskEngineAddress);
 
-  // Deploy VaultManager
+  // 3. Deploy VaultManager
+  // Mantle Testnet USDT address (or use your deployed USDT)
+  const USDT_ADDRESS = process.env.USDT_ADDRESS || "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE";
+
+  console.log("\n💰 Deploying VaultManager...");
+  console.log("Using USDT at:", USDT_ADDRESS);
   const VaultManager = await ethers.getContractFactory("VaultManager");
-  const vaultManager = await VaultManager.deploy(
-    "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE", // Testnet USDT
-    invoiceNFT.address
-  );
-  await vaultManager.deployed();
-  console.log("VaultManager deployed to:", vaultManager.address);
+  const vaultManager = await VaultManager.deploy(USDT_ADDRESS, invoiceNFTAddress);
+  await vaultManager.waitForDeployment();
+  const vaultManagerAddress = await vaultManager.getAddress();
+  console.log("✅ VaultManager deployed to:", vaultManagerAddress);
 
-  // Set up roles
-  await invoiceNFT.grantRole(await invoiceNFT.VALIDATOR_ROLE(), vaultManager.address);
-  console.log("Roles configured");
+  // 4. Configure roles and permissions
+  console.log("\n🔐 Configuring roles and permissions...");
 
-  // Save addresses
-  const addresses = {
-    invoiceNFT: invoiceNFT.address,
-    riskEngine: riskEngine.address,
-    vaultManager: vaultManager.address,
-    network: "mantleTestnet"
+  // Grant MINTER_ROLE to VaultManager
+  const MINTER_ROLE = await invoiceNFT.MINTER_ROLE();
+  await invoiceNFT.grantRole(MINTER_ROLE, vaultManagerAddress);
+  console.log("✅ Granted MINTER_ROLE to VaultManager");
+
+  // Grant VALIDATOR_ROLE to deployer (for demo purposes)
+  const VALIDATOR_ROLE = await invoiceNFT.VALIDATOR_ROLE();
+  await invoiceNFT.grantRole(VALIDATOR_ROLE, deployer.address);
+  console.log("✅ Granted VALIDATOR_ROLE to deployer");
+
+  // 5. Save deployment addresses
+  const deploymentInfo = {
+    network: "mantleTestnet",
+    deployedAt: new Date().toISOString(),
+    contracts: {
+      invoiceNFT: invoiceNFTAddress,
+      riskEngine: riskEngineAddress,
+      vaultManager: vaultManagerAddress,
+      usdt: USDT_ADDRESS
+    },
+    deployer: deployer.address
   };
 
-  console.log("\n=== Deployment Complete ===");
-  console.log(JSON.stringify(addresses, null, 2));
+  console.log("\n" + "=".repeat(60));
+  console.log("🎉 Deployment Complete!");
+  console.log("=".repeat(60));
+  console.log("\n📋 Deployment Summary:\n");
+  console.log(JSON.stringify(deploymentInfo, null, 2));
+
+  console.log("\n📝 Next Steps:");
+  console.log("1. Update .env files with contract addresses");
+  console.log("2. Verify contracts on Mantle Explorer");
+  console.log("3. Fund VaultManager with USDT for testing\n");
+
+  // Save to file
+  const fs = require("fs");
+  fs.writeFileSync(
+    "deployment.json",
+    JSON.stringify(deploymentInfo, null, 2)
+  );
+  console.log("💾 Deployment info saved to deployment.json\n");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
